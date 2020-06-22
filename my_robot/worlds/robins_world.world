@@ -188,29 +188,7 @@
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
-      </model>
-      <model name='my_robot'>
-        <pose frame=''>-0.000234 -0.011822 0.099994 -8e-06 7.1e-05 0.00348</pose>
-        <scale>1 1 1</scale>
-        <link name='left_wheel'>
-          <pose frame=''>-0.000756 0.138177 0.099993 -7e-06 0.001065 0.00348</pose>
-          <velocity>-0.001778 0.001063 -0.007508 -0.011372 -0.017786 2e-06</velocity>
-          <acceleration>1.1e-05 0.008944 -9.68079 -0.834069 -0.000875 0.000116</acceleration>
-          <wrench>5.7e-05 0.04472 -48.4039 0 -0 0</wrench>
-        </link>
-        <link name='right_wheel'>
-          <pose frame=''>0.000288 -0.161821 0.099996 -8e-06 0.002171 0.00348</pose>
-          <velocity>-0.001778 0.001053 -0.004324 -0.011273 -0.017785 2e-06</velocity>
-          <acceleration>-2e-06 -0.010902 -9.92847 -0.635629 -0.005789 0.000497</acceleration>
-          <wrench>-1e-05 -0.05451 -49.6423 0 -0 0</wrench>
-        </link>
-        <link name='robot_footprint'>
-          <pose frame=''>-0.000234 -0.011822 0.099994 -8e-06 7.1e-05 0.00348</pose>
-          <velocity>-0.001778 0.001058 -0.005912 -0.011152 -0.017785 1e-06</velocity>
-          <acceleration>-3e-06 0.000648 -9.79693 -0.387868 0.000678 -0.000132</acceleration>
-          <wrench>-4.7e-05 0.009791 -147.934 0 -0 0</wrench>
-        </link>
-      </model>
+      
       <model name='table'>
         <pose frame=''>-16.9222 0.691645 0 0 -0 0</pose>
         <scale>1 1 1</scale>
