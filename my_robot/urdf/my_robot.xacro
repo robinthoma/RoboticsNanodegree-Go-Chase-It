@@ -140,7 +140,7 @@
   </link>
 
   <gazebo reference="left_wheel">
-    <material>Gazebo/Blue</material>
+    <material>Gazebo/Red</material>
   </gazebo>
 
   <gazebo reference="right_wheel">
