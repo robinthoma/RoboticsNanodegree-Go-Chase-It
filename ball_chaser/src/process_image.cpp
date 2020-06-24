@@ -1,56 +1,89 @@
 #include "ros/ros.h"
-#include "geometry_msgs/Twist.h"
-
-// TODO: Include the ball_chaser "DriveToTarget" header file
 #include "ball_chaser/DriveToTarget.h"
+#include <sensor_msgs/Image.h>
 
-// ROS::Publisher motor commands
-ros::Publisher motor_command_publisher;
+// Define a global client that can request services
+ros::ServiceClient client;
 
-// TODO: Create a handle_drive_request callback function that executes whenever
-// a drive_bot service is requested. This function should publish the requested
-// linear x and angular velocities to the robot wheel joints. After publishing
-// the requested velocities, a message feedback should be returned with the
-// requested wheel velocities.
-bool handle_drive_request(ball_chaser::DriveToTarget::Request& req, ball_chaser::DriveToTarget::Response& res)
+// This function calls the comman_robot service to drive the robot in the
+// specified direction
+void drive_robot(float lin_x, float ang_z)
 {
-  ROS_INFO("DriveToTargetRequest received - linear_x: %1.2f, angular_z: %1.2f", req.linear_x, req.angular_z);
+  // TODO: Request a service and pass the velocities to it to drive the robot
+  ball_chaser::DriveToTarget srv;
+  srv.request.linear_x = lin_x;
+  srv.request.angular_z = ang_z;
+  client.call(srv);
+}
 
-  // Create a motor_command object of type geometry_msgs::Twist
-  geometry_msgs::Twist motor_command;
+// This callback function continuously executes and reads the image data
+void process_image_callback(const sensor_msgs::Image img)
+{
+  // TODO: Loop through each pixel in the image and check if there's a bright white one
+  // Then, identify if this pixel falls in the left, mid, or right side of the image
+  // Depending on the white ball position, call the drive_bot function and pass velocities to it
+  // Request a stop when there's no white ball seen by the camera
 
-  // Set wheel velocities
-  motor_command.linear.x = req.linear_x;
-  motor_command.angular.z = req.angular_z;
+  // Since the ball is level with the camera, only have to scan the middle third of the image
+  int scan_start = img.data.size() / 3;
+  int scan_end = img.data.size() * 2 / 3;
 
-  // Publish angles to drive the robot
-  motor_command_publisher.publish(motor_command);
+  int num_white_pixels = 0;
+  int x_position_sum = 0;
 
-  // Return a response message
-  res.msg_feedback = "Motor command received - linear_x: " + std::to_string(motor_command.linear.x) + ", angular_z: " + std::to_string(motor_command.angular.z);
+  // Scan each pixel looking for a white one
+  for (int i=scan_start; i+2<scan_end; i+=3) {
 
-  return true;
+    int red_channel = img.data[i];
+    int green_channel = img.data[i+1];
+    int blue_channel = img.data[i+2];
+
+    if (red_channel == 255 && green_channel == 255 && blue_channel == 255)
+    {
+      int x_position = (i % (img.width * 3)) / 3;
+      x_position_sum += x_position;
+      num_white_pixels += 1;
+    }
+  }
+
+  if (num_white_pixels == 0)
+  {
+    drive_robot(0.0, 0.0);
+  }
+  else
+  {
+    int mean_x_position = x_position_sum / num_white_pixels;
+    if (mean_x_position < img.width / 3)
+    {
+      drive_robot(0.5, 0.5);
+    }
+    else if (mean_x_position > img.width * 2 / 3)
+    {
+      drive_robot(0.5, -0.5);
+    }
+    else
+    {
+      drive_robot(0.5, 0.0);
+    }
+  }
 }
 
 int main(int argc, char** argv)
 {
-  // Initialize a ROS node
-  ros::init(argc, argv, "drive_bot");
-
-  // Create a ROS NodeHandle object
+  // Initialize the process_image node and create a handle to it
+  ros::init(argc, argv, "process_image");
   ros::NodeHandle n;
 
-  // Inform ROS master that we will be publishing a message of type
-  // geometry_msgs::Twist on the robot actuation topic with a publishing queue
-  // size of 10.
-  motor_command_publisher = n.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
+  // Define a client service capable of requesting services from command_robot
+  client = n.serviceClient<ball_chaser::DriveToTarget>("/ball_chaser/command_robot");
 
-  // TODO: Define a drive /ball_chaser/command_robot service with a
-  // handle_drive_request callback function
-  ros::ServiceServer service = n.advertiseService("/ball_chaser/command_robot", handle_drive_request);
+  // Subscribe to /camera/rgb/image_raw topic to read the image data inside the
+  // process_image_callback function
+  ros::Subscriber sub1 = n.subscribe("/camera/rgb/image_raw", 10, process_image_callback);
 
-  // TODO: Handle ROS communication events
+  // Handle ROS communication events
   ros::spin();
 
   return 0;
 }
+
